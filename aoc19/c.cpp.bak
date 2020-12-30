@@ -1,0 +1,110 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <map>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+//probably just need to convert from storing strings to storing binary a->0 b->1 to save big on memory
+//makes things a bit harder for my vector addition, and need to write a conversion function
+//might be harder because uh need to know when that shit terminates
+	
+
+vector<string> operator+ (const vector<string>& lhs, const vector<string>& rhs){
+	vector<string> out;
+	for(string a : lhs) for(string b : rhs) out.push_back(a + b);
+	return out;
+}
+
+pair<int, string> parse(string line){
+	for(int i = 0; i < line.size(); i++) if(line[i] == ':') line[i] = ' ';
+	stringstream s(line);
+	int x;
+	s >> x;
+	string str;
+	getline(s, str);
+	return pair<int, string>(x, str.substr(2));
+}
+
+
+vector<string> comp(int val, map<int, string>& urules, map<int, vector<string>>& rules){
+	auto it = rules.find(val);
+	if(it != rules.end()){
+		return it->second;
+	}
+	if(urules[val] == "\"a\""){
+		vector<string> out = {"a"};
+		rules.insert(pair<int, vector<string>>(val, out));
+		return out;
+	}
+	if(urules[val] == "\"b\""){
+		vector<string> out = {"b"};
+		rules.insert(pair<int, vector<string>>(val, out));
+		return out;
+	}
+
+	stringstream s(urules[val]);
+	vector<string> out;
+	vector<string> temp = {""};
+	string line;
+	while(true){
+		string ss;
+		if(!(s >> ss)) break;
+		
+		if(ss == "|"){
+			for(string a : temp) out.push_back(a);
+			temp = {""};
+			continue;
+		}
+		int x;
+		stringstream sss(ss);
+		sss >> x;
+		temp = temp + comp(x, urules, rules);
+	}
+	for(string a : temp) out.push_back(a);
+	rules.insert(pair<int, vector<string>>(val,out));
+
+	return out;
+}
+
+
+
+
+
+int main(){
+	string line;
+	ifstream f("input");
+
+	map<int, string> urules;
+
+	while(getline(f,line)){
+		if(line == "") break;
+		urules.insert(parse(line));
+	}
+
+
+	map<int, vector<string>> rules;	
+	vector<string> ft = comp(42, urules, rules);
+
+	for(string a : ft) cout << a.size() << endl;
+	cout << ft.size() <<endl;
+	
+
+	comp(8, urules, rules);
+	comp(11, urules, rules);
+
+	cout << "hey" << endl;
+
+	vector<string> zero = comp(0, urules, rules);
+
+	int total = 0;
+
+	while(getline(f,line)){
+		if(find(zero.begin(), zero.end(), line) != zero.end()) total++;
+	}
+
+	cout << total << endl;
+
+}

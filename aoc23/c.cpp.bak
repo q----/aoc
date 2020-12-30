@@ -1,0 +1,92 @@
+#include <iostream>
+#include <sstream>
+#include <forward_list>
+#include <algorithm>
+
+using namespace std;
+
+const string input = "853192647";
+
+forward_list<int>::iterator operator+(const forward_list<int>::iterator lhs, const int &rhs){
+	auto it = lhs;
+	for(int i = 0; i < rhs; i++) ++it;
+	return it;
+}
+
+string rotate(string in){
+	return in.substr(1) + in[0];
+}
+
+void rotate(forward_list<int>& in, forward_list<int>::iterator& it){
+	in.insert_after(it, in.front());
+	it++;
+	in.pop_front();
+}
+
+char m1(char a){
+	return (((a-58)%9)+57);
+}
+
+int m1(int a){
+	return (((a-1000001)%1000000)+1000000);
+}
+
+string step(string in){
+	string rem = in.substr(1,3);
+	in.erase(1,3);
+	char f = m1(in[0]);
+	while(rem.find(f) != string::npos) f = m1(f);
+	in.insert(in.find(f)+1, rem);
+	return rotate(in);
+}
+
+void step(forward_list<int>& in, forward_list<int>::iterator& it){
+	forward_list<int> rem;
+	rem.push_front((*(in.begin()+1)));
+	auto rit = rem.begin();
+	for(int i = 2; i < 4; i++){
+		rem.insert_after(rit, (*(in.begin()+i)));
+		rit++;
+	}
+	in.erase_after(in.begin(), in.begin()+ 4);
+	int f = m1(in.front());
+	while(find(rem.begin(), rem.end(), f) != rem.end()) f = m1(f);
+	in.insert_after(find(in.begin(),in.end(),f), rem.begin(), rem.end());
+	if(it+2 == in.end()) cout << "in there" << endl;
+	rotate(in, it);
+}
+
+int main(){
+	string curr = input;
+
+	for(int i = 0; i < 100; i++) curr = step(curr);
+
+	while(curr[0] != '1') curr = rotate(curr);
+
+	cout << curr.substr(1) << endl;
+
+	forward_list<int> cups;
+	
+	cups.push_front(input[0]-48);
+	auto it = cups.begin();
+	for(char a: input.substr(1)){
+	       cups.insert_after(it, a-48);
+	       it++;
+	}
+	for(int i = 10; i <= 1000000; i++){
+	       cups.insert_after(it,i);
+	       it++;
+	}
+
+	for(int i = 0; i < 10000000; i++){
+	       step(cups, it);
+	       cout << i << endl;
+	}
+
+	it = find(cups.begin(), cups.end(), 1);
+	cout << *(++it) * *(++it) << endl;
+
+
+
+	return 0;
+}

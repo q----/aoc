@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <set>
+#include <map>
 
 using namespace std;
 
@@ -9,8 +9,31 @@ struct cube{
 	int x;
 	int y;
 	int z;
+	cube(int a, int b, int c){
+		x = a;
+		y = b;
+		z = c;
+	}
+};
+
+bool operator<(const cube& lhs, const cube& rhs){
+	if(lhs.x != rhs.x) return (lhs.x < rhs.x);
+	if(lhs.y != rhs.y) return (lhs.y < rhs.y);
+	if(lhs.z != rhs.z) return (lhs.z < rhs.z);
+	return false;
+}
+
+ostream& operator<<(ostream& os, cube const& c){
+	os << c.x << ',' << c.y << ',' << c.z;
+	return os;
+}
+
+struct cub4{
+	int x;
+	int y;
+	int z;
 	int w;
-	cube(int a, int b, int c, int d){
+	cub4(int a, int b, int c, int d){
 		x = a;
 		y = b;
 		z = c;
@@ -18,68 +41,26 @@ struct cube{
 	}
 };
 
-bool operator==(const cube& lhs, const cube& rhs){
-	return (lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.z == rhs.z) && (lhs.w == rhs.w);
+bool operator<(const cub4& lhs, const cub4& rhs){
+	if(lhs.x != rhs.x) return (lhs.x < rhs.x);
+	if(lhs.y != rhs.y) return (lhs.y < rhs.y);
+	if(lhs.z != rhs.z) return (lhs.z < rhs.z);
+	if(lhs.w != rhs.w) return (lhs.w < rhs.w);
+	return false;
 }
 
-bool operator<(const cube& lhs, const cube& rhs){
-	return (lhs.x < rhs.x) || (lhs.y < rhs.y) || (lhs.z < rhs.z) || (lhs.w < rhs.w);
-}
-
-ostream& operator<<(ostream& os, cube const& c){
+ostream& operator<<(ostream& os, cub4 const& c){
 	os << c.x << ',' << c.y << ',' << c.z << ',' << c.w;
 	return os;
 }
 
-cube minc(vector<cube>& field){
-	cube out = field[0];
-	for(int i = 1; i < field.size(); i++){
-		if(out.x > field[i].x) out.x = field[i].x;
-		if(out.y > field[i].y) out.y = field[i].y;
-		if(out.z > field[i].z) out.z = field[i].z;
-		if(out.w > field[i].w) out.w = field[i].w;
-	}
-	return cube(out.x-1, out.y-1, out.z-1, out.w-1);
-}
-
-cube maxc(vector<cube>& field){
-	cube out = field[0];
-	for(int i = 1; i < field.size(); i++){
-		if(out.x < field[i].x) out.x = field[i].x;
-		if(out.y < field[i].y) out.y = field[i].y;
-		if(out.z < field[i].z) out.z = field[i].z;
-		if(out.w < field[i].w) out.w = field[i].w;
-	}
-	return cube(out.x+1, out.y+1, out.z+1, out.w+1);
-}
-
-bool isin(cube a, set<cube> field){
-	for(cube b : field) if(a==b) return true;
-	return false;
-}
-
-int adj(cube a, set<cube> field){
-	int total = 0;
-	for(int x = a.x-1; x <= a.x+1; x++){
-		for(int y = a.y-1; y <= a.y+1; y++){
-			for(int z = a.z-1; z <= a.z+1; z++){
-				for(int w = a.w-1; w <= a.w+1; w++){
-					if(cube(x,y,z,w) == a) continue;
-					if(isin(cube(x,y,z,w), field)) total++;
-				}
-			}
-		}
-	}
-	return total;
-}
-
-set<cube> adjc(cube a){
-	set<cube> out;
-	for(int x = a.x-1; x <= a.x+1; x++){
-		for(int y = a.y-1; y <= a.y+1; y++){
-			for(int z = a.z-1; z <= a.z+1; z++){
-				for(int w = a.w-1; w <= a.w+1; w++){
-					out.insert(cube(x,y,z,w));
+map<cube, int> adj(set<cube> a){
+	map<cube, int> out;
+	for(cube b : a){
+		for(int i = b.x-1;i <= b.x+1; i++){
+			for(int j = b.y-1; j <= b.y+1; j++){
+				for(int k = b.z-1; k <= b.z+1; k++){
+					out[cube(i,j,k)]++;
 				}
 			}
 		}
@@ -87,17 +68,30 @@ set<cube> adjc(cube a){
 	return out;
 }
 
-bool tst(cube a, set<cube> field){
-	int x = adj(a, field);
-	return ((x == 3) || ((x == 2) && isin(a, field)));
+map<cub4, int> adj(set<cub4> a){
+	map<cub4, int> out;
+	for(cub4 b : a){
+		for(int i = b.x-1;i <= b.x+1; i++){
+			for(int j = b.y-1; j <= b.y+1; j++){
+				for(int k = b.z-1; k <= b.z+1; k++){
+					for(int l = b.w-1; l <= b.w+1; l++){
+						out[cub4(i,j,k,l)]++;
+					}
+				}
+			}
+		}
+	}
+	return out;
 }
 
-set<cube> next(set<cube> field){
-	set<cube> out;
-
-	for(cube a : field){
-		for(cube b : adjc(a)){
-			if(tst(b,field)) out.insert(b);
+template<typename T>
+set<T> next(set<T> field){
+	set<T> out;
+	map<T, int> a = adj(field);
+	
+	for(auto b: a){
+		if(b.second == 3 || field.count(b.first) > 0 && b.second == 4){
+			out.insert(b.first);
 		}
 	}
 
@@ -109,25 +103,23 @@ int main(){
 	ifstream file("input");
 
 	set<cube> field;
-	int count = 0;
-	while(getline(file,line)){
+	set<cub4> fiel4;
+	for(int count = 0; getline(file,line); count++){
 		for(int i = 0; i < line.size(); i++){
-			if(line[i] == '#') field.insert(cube(i, count, 0, 0));
+			if(line[i] == '#'){
+			       field.insert(cube(i, count, 0));
+			       fiel4.insert(cub4(i, count, 0, 0));
+			}
 		}
-		count++;
 	}
-
-	cout << "[......]";
 
 	for(int i = 0; i < 6; i++){
 	        field = next(field);
-		cout << '#';
+		fiel4 = next(fiel4);
 	}
-
-
-	cout << field.size() << endl;
-
-	
+		
+	cout << field.size() << endl;		
+	cout << fiel4.size() << endl;
 
 	return 0;
 }

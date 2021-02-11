@@ -52,8 +52,8 @@ tile parse(string& line){
 			out.y++;
 			if(line[++i] == 'e'){
 				continue;
-			}
-			if(line[i] == 'w'){
+			} else {
+				//line[++i] == 'w'
 				out.x--;
 				continue;
 			}
@@ -62,9 +62,6 @@ tile parse(string& line){
 			out.y--;
 			if(line[++i] == 'e'){
 				out.x++;
-				continue;
-			}
-			if(line[i] == 'w'){
 				continue;
 			}
 		}
